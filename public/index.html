@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAN Screen Share</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ================= LOBBY ================= -->
+<div id="lobby">
+  <div class="lob-card">
+    <h1>🖥️ LAN Screen Share</h1>
+    <p class="muted">Transmita sua tela para os amigos na mesma rede (LAN, Radmin, Hamachi…)</p>
+    <label>Seu nick<input id="nick" maxlength="24" placeholder="Como você quer aparecer"></label>
+    <div class="seg" id="lobSeg">
+      <button data-m="join" class="on">Entrar em uma sala</button>
+      <button data-m="host">Criar uma sala</button>
+    </div>
+    <div id="paneJoin">
+      <label>IP da sala<input id="lobHost" placeholder="ex: 26.12.34.56 ou 26.12.34.56:3001"></label>
+      <button id="btnJoin" class="wide">Entrar</button>
+    </div>
+    <div id="paneHost" class="hide">
+      <label>Nome da sala<input id="lobRoom" value="Sala de Lives" maxlength="30"></label>
+      <label>Porta<input id="lobPort" type="number" value="3000"></label>
+      <button id="btnCreate" class="wide">Criar sala</button>
+    </div>
+    <div id="lobErr" class="err"></div>
+    <p class="muted small">Uma pessoa cria a sala e passa o IP (do Radmin/Hamachi) para os outros entrarem. Depois todos podem transmitir e assistir ao mesmo tempo.</p>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app" class="hide">
+  <aside id="side">
+    <div class="side-head"><span id="roomName"></span><button class="icon only-narrow" data-close="side">✕</button></div>
+    <div class="side-body">
+      <div class="section">Convite</div>
+      <div id="invite"></div>
+      <div class="section">Online — <span id="onlineCount">0</span></div>
+      <div id="members"></div>
+    </div>
+    <div class="userpanel">
+      <div class="avatar" id="meAvatar"></div>
+      <div class="who"><b id="meNick"></b><small id="meStatus">Online</small></div>
+      <button class="icon" id="btnGoLive" title="Transmitir tela">🖥️</button>
+      <button class="icon" id="btnSettings" title="Configurações">⚙️</button>
+      <button class="icon" id="btnLeave" title="Sair da sala">🚪</button>
+    </div>
+  </aside>
+
+  <main id="main">
+    <header class="top">
+      <button class="icon only-narrow" id="btnMembers">☰</button>
+      <span class="hash">📺</span><b>Lives</b>
+      <span class="grow"></span>
+      <button class="icon only-narrow" id="btnChat">💬</button>
+    </header>
+    <div class="content">
+      <section id="cardsSec">
+        <h3>Ao vivo agora</h3>
+        <div id="cards" class="cards"></div>
+        <div id="cardsEmpty" class="empty">
+          <div class="big">📡</div>
+          <b>Ninguém está transmitindo agora</b>
+          <span class="muted">Clique no botão 🖥️ no canto inferior esquerdo para começar sua live.</span>
+        </div>
+      </section>
+      <section><div id="tiles" class="tiles"></div></section>
+    </div>
+  </main>
+
+  <aside id="chat">
+    <div class="chat-head">💬 Chat <span class="grow"></span><button class="icon only-narrow" data-close="chat">✕</button></div>
+    <div id="msgs"></div>
+    <div class="composer"><input id="msgInput" maxlength="500" placeholder="Enviar mensagem"></div>
+  </aside>
+</div>
+
+<!-- ============ MODAL: TRANSMITIR ============ -->
+<div id="liveModal" class="modal hide">
+  <div class="dialog">
+    <div class="dlg-head"><h2 id="liveH">Transmitir tela</h2><button class="icon" id="liveClose">✕</button></div>
+    <div class="dlg-body">
+      <div class="srcbar">
+        <div class="seg" id="srcSeg"><button data-t="screen" class="on">🖥️ Telas</button><button data-t="window">🗗 Janelas</button></div>
+        <input id="srcSearch" placeholder="Buscar janela…">
+        <button class="ghost" id="srcRefresh" title="Atualizar lista">⟳</button>
+      </div>
+      <div id="srcGrid" class="srcgrid"></div>
+      <div class="srchelp muted small">Dica: abas do navegador não aparecem separadas — escolha a <b>janela</b> do navegador. Janelas de programas abertos como administrador só aparecem se este app também for executado como administrador.</div>
+
+      <div class="form">
+        <label class="full">Título da live<input id="liveTitle" maxlength="60"></label>
+        <label>Qualidade
+          <select id="preset">
+            <option value="1280,720,30,5">720p · 30 fps · 5 Mbps</option>
+            <option value="1280,720,60,8">720p · 60 fps · 8 Mbps</option>
+            <option value="1920,1080,30,8" selected>1080p · 30 fps · 8 Mbps</option>
+            <option value="1920,1080,60,12">1080p · 60 fps · 12 Mbps</option>
+            <option value="2560,1440,30,12">1440p · 30 fps · 12 Mbps</option>
+            <option value="2560,1440,60,20">1440p · 60 fps · 20 Mbps</option>
+            <option value="0,0,60,25">Nativa · 60 fps · 25 Mbps (rede forte)</option>
+          </select>
+        </label>
+        <label>Conteúdo
+          <select id="hint">
+            <option value="motion" selected>Jogo / vídeo (fluidez)</option>
+            <option value="detail">Texto / apps (nitidez)</option>
+          </select>
+        </label>
+        <label>Codec
+          <select id="codec">
+            <option value="auto" selected>Automático</option>
+            <option value="h264">H.264</option>
+            <option value="vp8">VP8</option>
+            <option value="vp9">VP9</option>
+            <option value="av1">AV1</option>
+          </select>
+        </label>
+        <label>Áudio do sistema
+          <select id="audioQ">
+            <option value="0">Desligado</option>
+            <option value="96">Normal · 96 kbps</option>
+            <option value="192" selected>Alta · 192 kbps</option>
+            <option value="320">Máxima · 320 kbps</option>
+          </select>
+        </label>
+        <label class="chk full"><input type="checkbox" id="showPreview" checked> Mostrar prévia da minha tela no meu card</label>
+      </div>
+      <div class="muted small" id="liveNote">As configurações podem ser alteradas com a live no ar: elas são aplicadas na hora (trocar o codec ou a qualidade do áudio reconecta os espectadores por um instante).</div>
+    </div>
+    <div class="dlg-foot">
+      <button class="danger hide" id="liveStop">■ Encerrar live</button>
+      <span class="grow"></span>
+      <button class="ghost" id="liveCancel">Fechar</button>
+      <button id="liveGo">▶ Ir ao vivo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: CONFIGURAÇÕES ============ -->
+<div id="setModal" class="modal hide">
+  <div class="dialog small">
+    <div class="dlg-head"><h2>Configurações</h2><button class="icon" id="setClose">✕</button></div>
+    <div class="dlg-body">
+      <div class="form">
+        <label class="full">Buffer de vídeo ao assistir
+          <select id="setLatency">
+            <option value="0">Mínimo (menor atraso, pode travar)</option>
+            <option value="60">Equilibrado</option>
+            <option value="150">Suave (rede instável)</option>
+          </select>
+        </label>
+        <label class="chk full"><input type="checkbox" id="setStats"> Mostrar estatísticas sobre os vídeos</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "lan-screen-share",
+  "productName": "LAN Screen Share",
+  "version": "3.0.0",
+  "description": "Compartilhamento de tela P2P para LAN / Radmin / Hamachi",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "dependencies": { "ws": "^8.18.0" },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "local.lan.screenshare",
+    "productName": "LAN Screen Share",
+    "files": ["main.js", "preload.js", "server.js", "public/**/*", "package.json"],
+    "win": { "target": ["portable"] }
+  }
+}
